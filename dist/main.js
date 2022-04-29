@@ -1,5 +1,4 @@
 import "./style.css";
-import * as THREE from 'three';
 import { OrbitControls } from './OrbitControls.js';
 
 // initial three.js setup
