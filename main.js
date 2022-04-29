@@ -1,5 +1,15 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass'
+
+const params = {
+				bloomStrength: 1.25,
+				bloomThreshold: 0.07,
+				bloomRadius: 0
+			};
+
 // initial three.js setup
 const scene = new THREE.Scene();
 
@@ -9,11 +19,24 @@ camera.position.set(-30, 20, 85);
 
 
 const renderer = new THREE.WebGLRenderer({
-  canvas: document.querySelector("#mc")
+  canvas: document.querySelector("#mc"),
+  antialias: true
 });
 renderer.setPixelRatio(window.devicePixelRatio);
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.render(scene, camera);
+
+const composer = new EffectComposer( renderer );
+
+const renderPass = new RenderPass( scene, camera );
+composer.addPass( renderPass );
+
+const bloomPass = new UnrealBloomPass(new THREE.Vector2( window.innerWidth, window.innerHeight ), 1, 0.4, 0.85);
+bloomPass.threshold = params.bloomThreshold;
+bloomPass.strength = params.bloomStrength;
+bloomPass.radius = params.bloomRadius;
+
+composer.addPass(bloomPass);
 
 // these functions will be called on each gameTick, they must have the form
 // (delta - change in time)
@@ -28,23 +51,23 @@ const controls = new OrbitControls(camera, renderer.domElement);
 
 
 
-// const ambientLight = new THREE.AmbientLight(0xFFFFFF);
-// scene.add(ambientLight);
+const ambientLight = new THREE.AmbientLight( 0x404040, 0.2);
+scene.add(ambientLight);
 
 var lights = [];
 
 // EFFECTS: Adds a pointLight to the scene, along with its corresponding
 // lightHelper.
 function addLight(x, y, z) {
-  const pointLight = new THREE.PointLight(0xFFFFFF, 2, 0);
+  const pointLight = new THREE.PointLight(0xAAAAAA, 1, 400);
   pointLight.position.set(x, y, z);
-  pointLight.power = 20;
+  pointLight.power = 15;
 
   scene.add(pointLight);
 
   lights.push(pointLight);
-  const lightHelper = new THREE.PointLightHelper(pointLight);
-  scene.add(lightHelper);
+  // const lightHelper = new THREE.PointLightHelper(pointLight);
+  // scene.add(lightHelper);
 
   var lx = x;
   var ly = y;
@@ -55,7 +78,7 @@ function addLight(x, y, z) {
   updateFunctions.push(function(deltaTime) {
 
       pointLight.position.x = mx + (85 * Math.sin(timeMoon * timeLightScale) - Math.PI/2);
-      pointLight.position.z = mz + (-30 * Math.sin((timeMoon * timeLightScale) + Math.PI/2));
+      pointLight.position.z = mz + (-85 * Math.sin((timeMoon * timeLightScale) + Math.PI/2));
       pointLight.position.y = my + (20 * Math.sin((timeMoon * timeLightScale) - Math.PI/2));
 
       timeLight += deltaTime;
@@ -90,8 +113,19 @@ Array(numStars).fill().forEach(() => {
   addStar();
 });
 
-const spaceTexture = new THREE.TextureLoader().load('img/space.jpg');
-scene.background = spaceTexture;
+const spaceTexture = new THREE.TextureLoader().load('img/background.jpg');
+
+const spaceGeometry = new THREE.SphereGeometry(250, 32, 32);
+
+const spaceMaterial = new THREE.MeshStandardMaterial({
+  map: spaceTexture,
+  side: THREE.BackSide,
+  transparent: true
+})
+
+const space = new THREE.Mesh(spaceGeometry, spaceMaterial);
+
+scene.add(space);
 
 // initialize moon
 
@@ -147,12 +181,11 @@ const earthCloudMap = new THREE.ImageUtils.loadTexture('img/earth-clouds.jpg');
 
 const earthRadius = 4;
 const earthGeometry = new THREE.SphereGeometry(earthRadius, 32, 32);
-const earthMaterial = new THREE.MeshPhongMaterial({
+const earthMaterial = new THREE.MeshStandardMaterial({
   map: earthTexture,
   bumpMap: earthBumpMap,
   bumpScale: 0.25,
-  specularMap: earthSpecularMap,
-  specular: new THREE.Color("grey")
+  roughness: 3
 });
 
 const earth = new THREE.Mesh(earthGeometry, earthMaterial);
@@ -180,7 +213,20 @@ updateFunctions.push(function(deltaTime) {
   earth.rotation.y += 1 / 8 * deltaTime;
 });
 
+// Atmosphere for earth
+const atmosphereColor = new THREE.Color("#48b4e0");
+const atmosphereGeometry = new THREE.SphereGeometry(earthRadius + 1.5, 32, 32);
+const atmosphereMaterial = new THREE.MeshBasicMaterial({
+   color: atmosphereColor,
+   opacity: 0.02,
+   transparent: true
+  });
+const atmosphere = new THREE.Mesh(atmosphereGeometry, atmosphereMaterial);
+atmosphere.position.set(0, 0, 0);
+scene.add(atmosphere);
 
+
+// Event listeners:
 
 function moveCamera() {
   const t = document.body.getBoundingClientRect().top;
@@ -194,6 +240,17 @@ function moveCamera() {
 }
 
 document.body.onscroll = moveCamera;
+
+function resizeHandler() {
+  renderer.setPixelRatio(window.devicePixelRatio);
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  composer.setSize(window.innerWidth, window.innerHeight);
+}
+
+window.addEventListener("resize", resizeHandler);
+
 
 var lastTime = new Date().getTime();
 
@@ -213,7 +270,8 @@ function update(deltaTime) {
 
     // Necessary updates
     controls.update();
-    renderer.render(scene, camera);
+    composer.render(scene, camera);
+
 
 
 }
