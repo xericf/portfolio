@@ -1,21 +1,66 @@
 import * as THREE from 'three';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
-import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
-import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
-import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass'
+import {
+  OrbitControls
+} from 'three/examples/jsm/controls/OrbitControls';
+import {
+  EffectComposer
+} from 'three/examples/jsm/postprocessing/EffectComposer.js';
+import {
+  RenderPass
+} from 'three/examples/jsm/postprocessing/RenderPass.js';
+import {
+  UnrealBloomPass
+} from 'three/examples/jsm/postprocessing/UnrealBloomPass'
 
 const params = {
-				bloomStrength: 1.25,
-				bloomThreshold: 0.07,
-				bloomRadius: 0
-			};
+  bloomStrength: 1.25,
+  bloomThreshold: 0.07,
+  bloomRadius: 0
+};
+
+var Shaders = {
+  'atmosphere': {
+    uniforms: {},
+    vertexShader: [
+      'varying vec3 vNormal;',
+      'void main() {',
+      'vNormal = normalize( normalMatrix * normal );',
+      'gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );',
+      '}'
+    ].join('\n'),
+    fragmentShader: [
+      'varying vec3 vNormal;',
+      'void main() {',
+      'float intensity = pow( 0.2 - dot( vNormal, vec3( 0, 0, 1.0 ) ), 12.0 );',
+      'gl_FragColor = vec4( 0.2509,	0.7059, 0.8784, 1.0 ) * intensity;',
+      '}'
+    ].join('\n')
+  },
+	'moon': {
+		uniforms: {},
+		vertexShader: [
+      'varying vec3 vNormal;',
+      'void main() {',
+      'vNormal = normalize( normalMatrix * normal );',
+      'gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );',
+      '}'
+    ].join('\n'),
+    fragmentShader: [
+      'varying vec3 vNormal;',
+      'void main() {',
+      'float intensity = pow( 0.4 - dot( vNormal, vec3( 0.0, 0.0, 1.0 ) ), 12.0 );',
+      'gl_FragColor = vec4( 1.0, 1.0, 1.0, 1.0 ) * intensity;',
+      '}'
+    ].join('\n')
+	}
+};
 
 // initial three.js setup
 const scene = new THREE.Scene();
 
 const fov = 75;
 const camera = new THREE.PerspectiveCamera(fov, window.innerWidth / window.innerHeight, 0.1, 1000);
-camera.position.set(-30, 20, 85);
+camera.position.set(-30, 20, 40);
 
 
 const renderer = new THREE.WebGLRenderer({
@@ -26,12 +71,12 @@ renderer.setPixelRatio(window.devicePixelRatio);
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.render(scene, camera);
 
-const composer = new EffectComposer( renderer );
+const composer = new EffectComposer(renderer);
 
-const renderPass = new RenderPass( scene, camera );
-composer.addPass( renderPass );
+const renderPass = new RenderPass(scene, camera);
+composer.addPass(renderPass);
 
-const bloomPass = new UnrealBloomPass(new THREE.Vector2( window.innerWidth, window.innerHeight ), 1, 0.4, 0.85);
+const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1, 0.4, 0.85);
 bloomPass.threshold = params.bloomThreshold;
 bloomPass.strength = params.bloomStrength;
 bloomPass.radius = params.bloomRadius;
@@ -49,9 +94,7 @@ const controls = new OrbitControls(camera, renderer.domElement);
 
 // lighting setup
 
-
-
-const ambientLight = new THREE.AmbientLight( 0x404040, 0.2);
+const ambientLight = new THREE.AmbientLight(0x404040, 0.25);
 scene.add(ambientLight);
 
 var lights = [];
@@ -77,18 +120,18 @@ function addLight(x, y, z) {
   var timeLightScale = 0.5;
   updateFunctions.push(function(deltaTime) {
 
-      pointLight.position.x = mx + (85 * Math.sin(timeMoon * timeLightScale) - Math.PI/2);
-      pointLight.position.z = mz + (-85 * Math.sin((timeMoon * timeLightScale) + Math.PI/2));
-      pointLight.position.y = my + (20 * Math.sin((timeMoon * timeLightScale) - Math.PI/2));
+    pointLight.position.x = mx + (85 * Math.sin(timeMoon * timeLightScale) - Math.PI / 2);
+    pointLight.position.z = mz + (-85 * Math.sin((timeMoon * timeLightScale) + Math.PI / 2));
+    pointLight.position.y = my + (20 * Math.sin((timeMoon * timeLightScale) - Math.PI / 2));
 
-      timeLight += deltaTime;
+    timeLight += deltaTime;
   });
 }
 
 addLight(camera.position.x + 1, camera.position.y + 1, camera.position.z + 1);
 
 // grid helper
-// const gridHelper = new THREE.GridHelper(200, 50);
+// const gridHelper = new THREE.GridHelper(100, 50);
 // scene.add(gridHelper);
 
 
@@ -131,18 +174,17 @@ scene.add(space);
 
 const moonTexture = new THREE.TextureLoader().load('img/moon.jpg');
 const moonMap = new THREE.TextureLoader().load('img/normal.jpg');
+const moonGeometry = new THREE.SphereGeometry(1, 32, 32);
+
 const moon = new THREE.Mesh(
-  new THREE.SphereGeometry(1, 32, 32),
-  new THREE.MeshStandardMaterial( {
-     map: moonTexture,
-     normalMap: moonMap
-}));
+  moonGeometry,
+	new THREE.MeshStandardMaterial({
+		map: moonTexture,
+		normalMap: moonMap
+	})
+);
 
-scene.add(moon);
-
-moon.rotateX(0.1);
-
-var moonOrbitDistance = 50;
+var moonOrbitDistance = 30;
 
 var mx = 0;
 var my = 0;
@@ -152,15 +194,41 @@ moon.position.x = mx;
 moon.position.y = my;
 moon.position.z = mz;
 
+scene.add(moon);
+
+const moonGlowGeometry = new THREE.SphereGeometry(1.05, 32, 32);
+const moonGlowMaterial = new THREE.ShaderMaterial({
+	uniforms: Shaders.moon.uniforms,
+	vertexShader: Shaders.moon.vertexShader,
+	fragmentShader: Shaders.moon.fragmentShader,
+	side: THREE.BackSide,
+	blending: THREE.AdditiveBlending,
+	transparent: true
+});
+const moonGlow = new THREE.Mesh(
+	moonGlowGeometry,
+	moonGlowMaterial
+);
+
+scene.add(moonGlow);
+
+moonGlow.position.x = mx;
+moonGlow.position.y = my;
+moonGlow.position.z = mz;
+
 var timeMoon = 0; // time in seconds for handling orbits
 var timeMoonScale = 0.05;
 
 updateFunctions.push(function(deltaTime) {
   // orbit around earth
 
-  moon.position.x = mx + (moonOrbitDistance * Math.sin(timeMoon * timeMoonScale) - Math.PI/2);
-  moon.position.z = mz + (moonOrbitDistance * Math.sin((timeMoon * timeMoonScale) + Math.PI/2));
-  moon.position.y = my + (10 * Math.sin((timeMoon * timeMoonScale) - Math.PI/2));
+  moon.position.x = mx + (moonOrbitDistance * Math.sin(timeMoon * timeMoonScale) - Math.PI / 2);
+  moon.position.z = mz + (moonOrbitDistance * Math.sin((timeMoon * timeMoonScale) + Math.PI / 2));
+  // moon.position.y = my + (10 * Math.sin((timeMoon * timeMoonScale) - Math.PI / 2));
+
+	moonGlow.position.x = mx + (moonOrbitDistance * Math.sin(timeMoon * timeMoonScale) - Math.PI / 2);
+	moonGlow.position.z = mz + (moonOrbitDistance * Math.sin((timeMoon * timeMoonScale) + Math.PI / 2));
+	// moonGlow.position.y = my + (10 * Math.sin((timeMoon * timeMoonScale) - Math.PI / 2));
 
   timeMoon += deltaTime;
 
@@ -215,12 +283,24 @@ updateFunctions.push(function(deltaTime) {
 
 // Atmosphere for earth
 const atmosphereColor = new THREE.Color("#48b4e0");
-const atmosphereGeometry = new THREE.SphereGeometry(earthRadius + 1.5, 32, 32);
-const atmosphereMaterial = new THREE.MeshBasicMaterial({
-   color: atmosphereColor,
-   opacity: 0.02,
-   transparent: true
-  });
+const atmosphereGeometry = new THREE.SphereGeometry(earthRadius + 3, 32, 32);
+// const atmosphereMaterial = new THREE.MeshBasicMaterial({
+//   color: atmosphereColor,
+//   opacity: 0.02,
+//   transparent: true
+// });
+//
+const atmosphereMaterial = new THREE.ShaderMaterial( {
+
+	uniforms: Shaders.atmosphere.uniforms,
+	vertexShader: Shaders.atmosphere.vertexShader,
+	fragmentShader: Shaders.atmosphere.fragmentShader,
+	side: THREE.BackSide,
+  blending: THREE.AdditiveBlending,
+  transparent: true
+
+} );
+
 const atmosphere = new THREE.Mesh(atmosphereGeometry, atmosphereMaterial);
 atmosphere.position.set(0, 0, 0);
 scene.add(atmosphere);
@@ -255,22 +335,22 @@ window.addEventListener("resize", resizeHandler);
 var lastTime = new Date().getTime();
 
 /***
-* updates
-* @param deltaTime - in miliseconds
-*/
+ * updates
+ * @param deltaTime - in miliseconds
+ */
 function update(deltaTime) {
-    if (Number.isNaN(deltaTime)) return;
+  if (Number.isNaN(deltaTime)) return;
 
-    deltaTime /= 1000;
+  deltaTime /= 1000;
 
-    // potentially variable updates
-    for (var i = 0; i < updateFunctions.length; i++) {
-      updateFunctions[i](deltaTime);
-    }
+  // potentially variable updates
+  for (var i = 0; i < updateFunctions.length; i++) {
+    updateFunctions[i](deltaTime);
+  }
 
-    // Necessary updates
-    controls.update();
-    composer.render(scene, camera);
+  // Necessary updates
+  controls.update();
+  composer.render(scene, camera);
 
 
 
