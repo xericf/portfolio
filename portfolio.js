@@ -10,3 +10,14 @@ $("#scroll-me").on("click", function(e) {
     behavior: 'smooth'
   });
 });
+
+
+
+$("#scroll-top").on("click", function(e) {
+
+  window.scroll({
+    top: 0,
+    left: 0,
+    behavior: 'smooth'
+  });
+});
