@@ -13,8 +13,8 @@ import {
 } from 'three/examples/jsm/postprocessing/UnrealBloomPass'
 
 const params = {
-  bloomStrength: 0.78,
-  bloomThreshold: 0.07,
+  bloomStrength: 0.8,
+  bloomThreshold: 0.05,
   bloomRadius: 0
 };
 
@@ -49,7 +49,7 @@ var Shaders = {
     fragmentShader: [
       'varying vec3 vNormal;',
       'void main() {',
-      'float intensity = pow( 0.4 - dot( vNormal, vec3( 0.0, 0.0, 1.0 ) ), 10.0 );',
+      'float intensity = pow( 0.5 - dot( vNormal, vec3( 0.0, 0.0, 1.0 ) ), 8.0 );',
       'gl_FragColor = vec4( 1.0, 1.0, 1.0, 1.0 ) * intensity;',
       '}'
     ].join('\n')
@@ -137,19 +137,23 @@ addLight(camera.position.x + 1, camera.position.y + 1, camera.position.z + 1);
 // scene.add(gridHelper);
 
 
-const numStars = 120;
-const starSpread = 150; // distance from origin-components that stars could be
+const numStars = 150;
+const starSpread = 125; // distance from origin-components that stars could be
+const minDistance = 25;
 
 // EFFECTS: Adds a new star at a random position
 function addStar() {
-  var radius = Math.random() * 0.15 + 0.05;
+  var radius = Math.random() * 0.4 + 0.15;
 
-  const sg = new THREE.SphereGeometry(0.15, 24, 24);
-  const material = new THREE.MeshStandardMaterial({
+  const sg = new THREE.SphereGeometry(radius, 24, 24);
+  const material = new THREE.MeshBasicMaterial({
     color: 0xFFFFFF
   });
   const star = new THREE.Mesh(sg, material);
-  const [x, y, z] = Array(3).fill().map(() => THREE.MathUtils.randFloatSpread(starSpread));
+  const [x, y, z] = Array(3).fill().map(() => {
+		var rand = THREE.MathUtils.randFloat(minDistance, minDistance + starSpread);
+		return Math.random() < 0.5 ? -1 * rand : rand;
+	});
   star.position.set(x, y, z);
   scene.add(star);
 }
@@ -338,7 +342,6 @@ function resizeHandler() {
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
   composer.setSize(window.innerWidth, window.innerHeight);
-	finalComposer.setSize(window.innerWidth, window.innerHeight);
 }
 
 window.addEventListener("resize", resizeHandler);

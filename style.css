@@ -63,6 +63,7 @@ section {
   font-size: 1.25rem;
   line-height: 1.5;
   margin-bottom: var(--spacing);
+  border-radius: 12px;
 }
 
 blockquote {
@@ -82,4 +83,30 @@ blockquote p {
 
 .left {
   grid-column: 6 / 12;
+}
+
+
+.linear-wipe {
+  text-align: center;
+
+  background: linear-gradient(to right, #3299a8 0%, #1eb051 50%, #40B4E0 100%);
+  background-size: 300% auto;
+
+  color: #000;
+  background-clip: text;
+  -webkit-background-clip: text;
+  text-fill-color: transparent;
+  -webkit-text-fill-color: transparent;
+
+  background-position: -100%;
+  animation: animatedThankYou 1.5s infinite alternate-reverse;
+}
+
+@keyframes animatedThankYou {
+  from {
+    background-position: 0%;
+  }
+  to {
+    background-position: 100%;
+  }
 }
