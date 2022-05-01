@@ -13,7 +13,7 @@ import {
 } from 'three/examples/jsm/postprocessing/UnrealBloomPass'
 
 const params = {
-  bloomStrength: 0.8,
+  bloomStrength: 0.85,
   bloomThreshold: 0.05,
   bloomRadius: 0
 };
