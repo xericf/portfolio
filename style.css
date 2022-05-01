@@ -66,6 +66,10 @@ section {
   border-radius: 12px;
 }
 
+section p {
+  text-indent: 4rem;
+}
+
 blockquote {
   margin: 0;
   padding: 0;
