@@ -13,11 +13,12 @@ import {
 } from 'three/examples/jsm/postprocessing/UnrealBloomPass'
 
 const params = {
-  bloomStrength: 1.25,
+  bloomStrength: 0.78,
   bloomThreshold: 0.07,
   bloomRadius: 0
 };
 
+// Shaders from: https://github.com/dataarts/webgl-globe/blob/8d746a3dbf95e57ec3c6c2c6effe920c95135253/globe/globe.js
 var Shaders = {
   'atmosphere': {
     uniforms: {},
@@ -31,8 +32,8 @@ var Shaders = {
     fragmentShader: [
       'varying vec3 vNormal;',
       'void main() {',
-      'float intensity = pow( 0.2 - dot( vNormal, vec3( 0, 0, 1.0 ) ), 12.0 );',
-      'gl_FragColor = vec4( 0.2509,	0.7059, 0.8784, 1.0 ) * intensity;',
+      'float intensity = pow( 0.35 - dot( vNormal, vec3( 0, 0, 1.0 ) ), 5.5 );',
+      'gl_FragColor = vec4( 0.2509,	0.7059, 0.8784, 0.9 ) * intensity;',
       '}'
     ].join('\n')
   },
@@ -48,7 +49,7 @@ var Shaders = {
     fragmentShader: [
       'varying vec3 vNormal;',
       'void main() {',
-      'float intensity = pow( 0.4 - dot( vNormal, vec3( 0.0, 0.0, 1.0 ) ), 12.0 );',
+      'float intensity = pow( 0.4 - dot( vNormal, vec3( 0.0, 0.0, 1.0 ) ), 10.0 );',
       'gl_FragColor = vec4( 1.0, 1.0, 1.0, 1.0 ) * intensity;',
       '}'
     ].join('\n')
@@ -60,7 +61,8 @@ const scene = new THREE.Scene();
 
 const fov = 75;
 const camera = new THREE.PerspectiveCamera(fov, window.innerWidth / window.innerHeight, 0.1, 1000);
-camera.position.set(-30, 20, 40);
+const cameraRadius = 36;
+camera.position.set(Math.sin(0) * cameraRadius, 13.1, -Math.sin(Math.PI/2) * cameraRadius);
 
 
 const renderer = new THREE.WebGLRenderer({
@@ -94,7 +96,7 @@ const controls = new OrbitControls(camera, renderer.domElement);
 
 // lighting setup
 
-const ambientLight = new THREE.AmbientLight(0x404040, 0.25);
+const ambientLight = new THREE.AmbientLight(0x404040, 0.27);
 scene.add(ambientLight);
 
 var lights = [];
@@ -102,7 +104,7 @@ var lights = [];
 // EFFECTS: Adds a pointLight to the scene, along with its corresponding
 // lightHelper.
 function addLight(x, y, z) {
-  const pointLight = new THREE.PointLight(0xAAAAAA, 1, 400);
+  const pointLight = new THREE.PointLight(0xAAAAAA, 1, 300);
   pointLight.position.set(x, y, z);
   pointLight.power = 15;
 
@@ -158,7 +160,7 @@ Array(numStars).fill().forEach(() => {
 
 const spaceTexture = new THREE.TextureLoader().load('img/background.jpg');
 
-const spaceGeometry = new THREE.SphereGeometry(250, 32, 32);
+const spaceGeometry = new THREE.SphereGeometry(150, 32, 32);
 
 const spaceMaterial = new THREE.MeshStandardMaterial({
   map: spaceTexture,
@@ -184,7 +186,7 @@ const moon = new THREE.Mesh(
 	})
 );
 
-var moonOrbitDistance = 30;
+var moonOrbitDistance = 20;
 
 var mx = 0;
 var my = 0;
@@ -224,11 +226,11 @@ updateFunctions.push(function(deltaTime) {
 
   moon.position.x = mx + (moonOrbitDistance * Math.sin(timeMoon * timeMoonScale) - Math.PI / 2);
   moon.position.z = mz + (moonOrbitDistance * Math.sin((timeMoon * timeMoonScale) + Math.PI / 2));
-  // moon.position.y = my + (10 * Math.sin((timeMoon * timeMoonScale) - Math.PI / 2));
+  moon.position.y = my + (10 * Math.sin((timeMoon * timeMoonScale) - Math.PI / 2));
 
 	moonGlow.position.x = mx + (moonOrbitDistance * Math.sin(timeMoon * timeMoonScale) - Math.PI / 2);
 	moonGlow.position.z = mz + (moonOrbitDistance * Math.sin((timeMoon * timeMoonScale) + Math.PI / 2));
-	// moonGlow.position.y = my + (10 * Math.sin((timeMoon * timeMoonScale) - Math.PI / 2));
+	moonGlow.position.y = my + (10 * Math.sin((timeMoon * timeMoonScale) - Math.PI / 2));
 
   timeMoon += deltaTime;
 
@@ -283,7 +285,7 @@ updateFunctions.push(function(deltaTime) {
 
 // Atmosphere for earth
 const atmosphereColor = new THREE.Color("#48b4e0");
-const atmosphereGeometry = new THREE.SphereGeometry(earthRadius + 3, 32, 32);
+const atmosphereGeometry = new THREE.SphereGeometry(earthRadius + 2, 32, 32);
 // const atmosphereMaterial = new THREE.MeshBasicMaterial({
 //   color: atmosphereColor,
 //   opacity: 0.02,
@@ -306,17 +308,26 @@ atmosphere.position.set(0, 0, 0);
 scene.add(atmosphere);
 
 
+
+
 // Event listeners:
 
 function moveCamera() {
-  const t = document.body.getBoundingClientRect().top;
+
+
+  const t = document.body.getBoundingClientRect().top / 500;
   moon.rotation.x += 0.05;
   moon.rotation.y += 0.05;
   moon.rotation.z += 0.05;
 
-  camera.position.z = t * -0.01;
-  camera.position.x = t * -0.01;
-  camera.posiiton.y = t * -0.01;
+
+	var damping = Math.pow(Math.E, t/5); // t is negative as you scroll down
+	var x = Math.sin(t) * cameraRadius * damping;
+	var z = - Math.sin(t + (Math.PI/2)) * cameraRadius * damping;
+  camera.position.x = x;
+  camera.position.z = z;
+
+  // camera.posiiton.y = t * -0.01;
 }
 
 document.body.onscroll = moveCamera;
@@ -327,6 +338,7 @@ function resizeHandler() {
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
   composer.setSize(window.innerWidth, window.innerHeight);
+	finalComposer.setSize(window.innerWidth, window.innerHeight);
 }
 
 window.addEventListener("resize", resizeHandler);
@@ -350,8 +362,8 @@ function update(deltaTime) {
 
   // Necessary updates
   controls.update();
-  composer.render(scene, camera);
 
+  composer.render(scene, camera);
 
 
 }
