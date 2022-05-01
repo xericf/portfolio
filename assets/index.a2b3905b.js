@@ -3107,7 +3107,7 @@ void main() {
 						lerpBloomFactor(bloomFactors[2]) * vec4(bloomTintColors[2], 1.0) * texture2D(blurTexture3, vUv) +
 						lerpBloomFactor(bloomFactors[3]) * vec4(bloomTintColors[3], 1.0) * texture2D(blurTexture4, vUv) +
 						lerpBloomFactor(bloomFactors[4]) * vec4(bloomTintColors[4], 1.0) * texture2D(blurTexture5, vUv) );
-				}`})}}Si.BlurDirectionX=new q(1,0);Si.BlurDirectionY=new q(0,1);const Qo={bloomStrength:.8,bloomThreshold:.05,bloomRadius:0};var _i={atmosphere:{uniforms:{},vertexShader:["varying vec3 vNormal;","void main() {","vNormal = normalize( normalMatrix * normal );","gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );","}"].join(`
+				}`})}}Si.BlurDirectionX=new q(1,0);Si.BlurDirectionY=new q(0,1);const Qo={bloomStrength:.85,bloomThreshold:.05,bloomRadius:0};var _i={atmosphere:{uniforms:{},vertexShader:["varying vec3 vNormal;","void main() {","vNormal = normalize( normalMatrix * normal );","gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );","}"].join(`
 `),fragmentShader:["varying vec3 vNormal;","void main() {","float intensity = pow( 0.35 - dot( vNormal, vec3( 0, 0, 1.0 ) ), 5.5 );","gl_FragColor = vec4( 0.2509,	0.7059, 0.8784, 0.9 ) * intensity;","}"].join(`
 `)},moon:{uniforms:{},vertexShader:["varying vec3 vNormal;","void main() {","vNormal = normalize( normalMatrix * normal );","gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );","}"].join(`
 `),fragmentShader:["varying vec3 vNormal;","void main() {","float intensity = pow( 0.5 - dot( vNormal, vec3( 0.0, 0.0, 1.0 ) ), 8.0 );","gl_FragColor = vec4( 1.0, 1.0, 1.0, 1.0 ) * intensity;","}"].join(`
