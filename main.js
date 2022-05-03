@@ -137,13 +137,13 @@ addLight(camera.position.x + 1, camera.position.y + 1, camera.position.z + 1);
 // scene.add(gridHelper);
 
 
-const numStars = 150;
-const starSpread = 125; // distance from origin-components that stars could be
+const numStars = 100;
+const starSpread = 70; // distance from origin-components that stars could be
 const minDistance = 25;
 
 // EFFECTS: Adds a new star at a random position
 function addStar() {
-  var radius = Math.random() * 0.4 + 0.15;
+  var radius = Math.random() * 0.40 + 0.2;
 
   const sg = new THREE.SphereGeometry(radius, 24, 24);
   const material = new THREE.MeshBasicMaterial({
@@ -164,7 +164,7 @@ Array(numStars).fill().forEach(() => {
 
 const spaceTexture = new THREE.TextureLoader().load('img/background.jpg');
 
-const spaceGeometry = new THREE.SphereGeometry(150, 32, 32);
+const spaceGeometry = new THREE.SphereGeometry(120, 32, 32);
 
 const spaceMaterial = new THREE.MeshStandardMaterial({
   map: spaceTexture,
@@ -310,8 +310,6 @@ const atmosphereMaterial = new THREE.ShaderMaterial( {
 const atmosphere = new THREE.Mesh(atmosphereGeometry, atmosphereMaterial);
 atmosphere.position.set(0, 0, 0);
 scene.add(atmosphere);
-
-
 
 
 // Event listeners:
