@@ -62,6 +62,7 @@ const scene = new THREE.Scene();
 const fov = 75;
 const camera = new THREE.PerspectiveCamera(fov, window.innerWidth / window.innerHeight, 0.1, 1000);
 const cameraRadius = 36;
+const minimumDamping = 0.25; // cannot go below this damping factor
 camera.position.set(Math.sin(0) * cameraRadius, 13.1, -Math.sin(Math.PI/2) * cameraRadius);
 
 
@@ -323,7 +324,7 @@ function moveCamera() {
   moon.rotation.z += 0.05;
 
 
-	var damping = Math.pow(Math.E, t/5); // t is negative as you scroll down
+	var damping = Math.max(Math.pow(Math.E, t/5), minimumDamping); // t is negative as you scroll down
 	var x = Math.sin(t) * cameraRadius * damping;
 	var z = - Math.sin(t + (Math.PI/2)) * cameraRadius * damping;
   camera.position.x = x;
